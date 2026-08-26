@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# כלביית רחובות — מעקב כלבים וחתולים
 
-## Getting Started
+A rebuilt version of the shelter tracker. It is a normal Next.js app with a local SQLite database, staff logins, and a path to real hosting later.
 
-First, run the development server:
+The original ChatGPT / vinext / D1 project stays in `rehovot-kennel-site-handoff/`. This folder is the one to host.
+
+## What changed from the vibe-coded app
+
+- Every staff member has their own login. Daily kennel work has the same permissions; only admins manage users.
+- Dates use Israel time and a real date picker.
+- Medication countdown counts from the treatment date, not the report date.
+- Dogs and cats no longer share the “one day left” list.
+- Animals are added and archived by name. Archived animals can be restored; their history stays.
+- Same-symptom reports cannot silently merge. The app asks you to edit the open report.
+- Excel download stays on the page and requires login. Whole-kennel export is available after login.
+- Typed vaccine names are saved to the quick-pick list.
+- Renaming a person, animal, symptom, or vaccine updates related records.
+
+## Demo logins
+
+After seeding:
+
+| User | Password | Role |
+| --- | --- | --- |
+| `admin` | `admin123` | Admin |
+| `haim` | `staff123` | Staff |
+| `yonatan` | `staff123` | Staff |
+| `shaked` | `staff123` | Staff |
+| `tal` | `staff123` | Staff |
+
+Demo data includes open reports, medications near the end of treatment, history, and planned vaccines.
+
+## Run locally
+
+Needs Node.js 22+.
 
 ```bash
+cd rehovot-kennel
+npm install
+copy .env.example .env.local
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Reset the demo database with `npm run db:reset`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Hosting later
 
-## Learn More
+This is ordinary Next.js. Good options:
 
-To learn more about Next.js, take a look at the following resources:
+1. **A small VPS** (Hetzner, DigitalOcean, Railway) with the SQLite file on disk. Point `www.rehovot-dogs.com` at it.
+2. **Vercel + Turso** (hosted libSQL). Set `DATABASE_URL` to the Turso URL and `AUTH_SECRET` to a long random string.
+3. Do **not** drop this on OpenAI Sites or generic PHP hosting.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Before production:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Change every demo password
+- Set a new `AUTH_SECRET`
+- Turn on HTTPS
+- Keep backups of `data/kennel.db`
 
-## Deploy on Vercel
+## Importing the old D1 database
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The live D1 data is not in this repo. When you have the dump, we can write an importer into this cleaner schema (unified `animals` + `reports` instead of separate dog/cat tables).
