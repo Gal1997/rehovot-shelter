@@ -104,6 +104,29 @@ export default function UsersPage() {
     }
   }
 
+  async function changeRole(user: UserRow, nextRole: "admin" | "staff") {
+    if (user.role === nextRole) return;
+    const demotingLastAdmin = user.role === "admin" && user.active && activeAdmins <= 1 && nextRole === "staff";
+    if (demotingLastAdmin) {
+      toast.error("חייב להישאר לפחות מנהל פעיל אחד במערכת");
+      setUsers((prev) => [...prev]);
+      return;
+    }
+    const label = nextRole === "admin" ? "מנהל" : "עובד";
+    if (!window.confirm(`לשנות את התפקיד של “${user.displayName}” ל־${label}?`)) {
+      setUsers((prev) => [...prev]);
+      return;
+    }
+    try {
+      await api("/api/users", { method: "PATCH", body: JSON.stringify({ id: user.id, role: nextRole }) });
+      toast.success(`התפקיד של ${user.displayName} עודכן ל־${label}`);
+      await load();
+    } catch (e) {
+      toastCaught(e, "עדכון התפקיד נכשל");
+      setUsers((prev) => [...prev]);
+    }
+  }
+
   function closePasswordForm() {
     setPasswordFor(null);
     setNewPassword("");
@@ -149,7 +172,7 @@ export default function UsersPage() {
           <div>
             <em>ניהול צוות</em>
             <h1>ניהול משתמשים</h1>
-            <p>כולם יכולים לנהל דיווחים. רק מנהל יכול להוסיף או להשבית משתמשים.</p>
+            <p>כולם יכולים לנהל דיווחים. רק מנהל יכול להוסיף משתמשים, לשנות תפקידים או להשבית חשבונות.</p>
           </div>
         </section>
         <form onSubmit={create} className="panel" style={{ display: "grid", gap: 10, marginBottom: 20, padding: 20 }}>
@@ -212,7 +235,18 @@ export default function UsersPage() {
                         </td>
                         <td data-x="משתמש">{user.username}</td>
                         <td data-x="תפקיד">
-                          <span className="chip">{user.role === "admin" ? "מנהל" : "עובד"}</span>
+                          <label className="role-switch">
+                            <span className="visually-hidden">תפקיד של {user.displayName}</span>
+                            <select
+                              value={user.role}
+                              disabled={lastAdmin}
+                              title={lastAdmin ? "חייב להישאר מנהל פעיל אחד" : "שינוי תפקיד"}
+                              onChange={(e) => changeRole(user, e.target.value as "admin" | "staff")}
+                            >
+                              <option value="staff">עובד</option>
+                              <option value="admin">מנהל</option>
+                            </select>
+                          </label>
                         </td>
                         <td data-x="מצב">
                           <span className={`user-status ${user.active ? "on" : "off"}`}>{user.active ? "פעיל" : "מושבת"}</span>
@@ -226,8 +260,8 @@ export default function UsersPage() {
                                 onClick={() => {
                                   setPasswordFor(user.id);
                                   setNewPassword("");
-                            setPasswordError("");
-                          }}
+                                  setPasswordError("");
+                                }}
                               >
                                 שינוי סיסמה
                               </button>

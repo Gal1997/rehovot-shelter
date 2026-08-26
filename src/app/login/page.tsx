@@ -66,9 +66,6 @@ function LoginForm() {
               {saving ? "מתחבר..." : "כניסה"}
             </button>
           </form>
-          <p style={{ color: "var(--muted)", fontSize: 13, margin: 0 }}>
-            דמו: <b>admin / admin123</b> או <b>haim / staff123</b>
-          </p>
         </div>
       </section>
     </main>
